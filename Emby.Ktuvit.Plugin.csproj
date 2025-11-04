@@ -10,7 +10,7 @@
 		<Authors>Flawkee</Authors>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<GeneratedAssemblyInfoFile>assemblyinfo.cs</GeneratedAssemblyInfoFile>
-		<Version>1.0.2.0</Version>
+		<Version>1.0.2.1</Version>
 	</PropertyGroup>
 
 	<ItemGroup>

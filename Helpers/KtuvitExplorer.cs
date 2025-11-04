@@ -306,7 +306,7 @@ namespace Ktuvit.Plugin.Helpers
             {
                 var httpRequest = new HttpRequestOptions();
                 httpRequest.Url = ApiBaseUrl;
-                var requestTimeout = Plugin.Instance.Options.requestTimeout ?? 2;
+                var requestTimeout = Plugin.Instance.Options.requestTimeout ?? 5;
                 httpRequest.TimeoutMs = requestTimeout * 1000; // in milliseconds
                 var responseTask = _httpClient.GetResponse(httpRequest);
                 responseTask.Wait(); // Block until complete

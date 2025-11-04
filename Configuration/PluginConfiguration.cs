@@ -21,7 +21,7 @@ namespace Ktuvit.Plugin.Configuration
                                                     + "If credentials are not provided, the plugin will still download series subtitles.\n\n";
 
         [DisplayName("Ktuvit Request Timeout")]
-        [Description("Request Timeout (in seconds): If not configured, the default is 2 seconds. This should be set and saved before setting up username and password. This setting is helpful if Ktuvit.me is unavailable, ensuring that subtitle search doesn't wait the full 30 seconds (the Emby default) before returning a response.")]
+        [Description("Request Timeout (in seconds): If not configured, the default is 5 seconds. This should be set and saved before setting up username and password. This setting is helpful if Ktuvit.me is unavailable, ensuring that subtitle search doesn't wait the full 30 seconds (the Emby default) before returning a response.")]
         public int? requestTimeout { get; set; }
         [DisplayName("Ktuvit Username")]
         [Description("Email address registered in Ktuvit.me")]
