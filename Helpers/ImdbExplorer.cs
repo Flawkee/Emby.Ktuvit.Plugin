@@ -65,6 +65,7 @@ namespace Ktuvit.Plugin.Helpers
                 return null;
             }
             var httpRequest = new HttpRequestOptions();
+            httpRequest.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0 Safari/537.36";
             httpRequest.Url = $"{ImdbUrl}/title/{episodeImdbId}";
             var response = await _httpClient.GetResponse(httpRequest);
             string htmlContent;
