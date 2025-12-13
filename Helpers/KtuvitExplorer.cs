@@ -69,6 +69,34 @@ namespace Ktuvit.Plugin.Helpers
         public async Task<string> GetKtuvitId(string filmName, int searchType, string imdbId)
         {
             // searchType: 0 for movies, 1 for TV shows
+            
+            // First attempt with original film name
+            var ktuvitId = await SearchKtuvitId(filmName, searchType, imdbId);
+            if (ktuvitId != null)
+            {
+                return ktuvitId;
+            }
+
+            // If not found and film name contains brackets, try again without brackets
+            if (filmName.Contains('(') && filmName.Contains(')'))
+            {
+                var filmNameWithoutBrackets = Regex.Replace(filmName, @"\s*\([^)]*\)", "").Trim();
+                if (filmNameWithoutBrackets != filmName)
+                {
+                    _logger.Info($"Ktuvit: Retrying search without brackets: '{filmNameWithoutBrackets}'");
+                    ktuvitId = await SearchKtuvitId(filmNameWithoutBrackets, searchType, imdbId);
+                    if (ktuvitId != null)
+                    {
+                        return ktuvitId;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private async Task<string> SearchKtuvitId(string filmName, int searchType, string imdbId)
+        {
             var requestBody = new
             {
                 request = new
@@ -89,9 +117,11 @@ namespace Ktuvit.Plugin.Helpers
             };
             var json = _jsonSerializer.SerializeToString(requestBody);
 
-            _logger.Info($"Ktuvit: Searching for Ktuvit ID");
+            _logger.Info($"Ktuvit: Searching for Ktuvit ID with film name: '{filmName}'");
 
             var httpRequest = new HttpRequestOptions();
+            var requestTimeout = Plugin.Instance.Options.requestTimeout ?? 10;
+            httpRequest.TimeoutMs = requestTimeout * 1000; // in milliseconds
             httpRequest.Url = SearchUrl;
             httpRequest.RequestContentType = "application/json";
             httpRequest.RequestContent = json.ToCharArray().AsMemory();
@@ -114,10 +144,6 @@ namespace Ktuvit.Plugin.Helpers
                             {
                                 _logger.Info($"Ktuvit: Match found for film '{filmName}' with Ktuvit ID: {film.ID}");
                                 return film.ID;
-                            }
-                            else
-                            {
-                                continue;
                             }
                         }
                         _logger.Info($"Ktuvit: No match found for film '{filmName}' with IMDb ID '{imdbId}'");
@@ -143,9 +169,11 @@ namespace Ktuvit.Plugin.Helpers
                 _logger.Error("Ktuvit: Cannot search movie subtitles without valid authentication.");
                 return results;
             }
-            _logger.Info("Ktuvit: Authentication successful. Proceeding to search movie subtitles.");
+            _logger.Info("Ktuvit: Proceeding to search movie subtitles.");
             string searchUrl = $"{MovieUrl}?ID={ktuvitId}";
             var httpRequest = new HttpRequestOptions();
+            var requestTimeout = Plugin.Instance.Options.requestTimeout ?? 10;
+            httpRequest.TimeoutMs = requestTimeout * 1000; // in milliseconds
             httpRequest.Url = searchUrl;
             var response = await _httpClient.GetResponse(httpRequest);
             string htmlContent;
@@ -174,6 +202,8 @@ namespace Ktuvit.Plugin.Helpers
             var results = new List<RemoteSubtitleInfo>();
             string searchUrl = $"{SeriesUrl}&SeriesID={ktuvitId}&Season={ktuvitSeriesSearchRequest.SeasonIndex}&Episode={ktuvitSeriesSearchRequest.EpisodeIndex}";
             var httpRequest = new HttpRequestOptions();
+            var requestTimeout = Plugin.Instance.Options.requestTimeout ?? 10;
+            httpRequest.TimeoutMs = requestTimeout * 1000; // in milliseconds
             httpRequest.Url = searchUrl;
             var response = await _httpClient.GetResponse(httpRequest);
             string htmlContent;
@@ -256,6 +286,8 @@ namespace Ktuvit.Plugin.Helpers
 
             var json = _jsonSerializer.SerializeToString(requestBody);
             var httpRequest = new HttpRequestOptions();
+            var requestTimeout = Plugin.Instance.Options.requestTimeout ?? 10;
+            httpRequest.TimeoutMs = requestTimeout * 1000; // in milliseconds
             httpRequest.Url = RequestDownloadUrl;
             httpRequest.RequestContentType = "application/json";
             httpRequest.RequestContent = json.ToCharArray().AsMemory();
@@ -272,6 +304,7 @@ namespace Ktuvit.Plugin.Helpers
                     {
                         string downloadId = searchResults.DownloadIdentifier;
                         var downloadRequest = new HttpRequestOptions();
+                        downloadRequest.TimeoutMs = requestTimeout * 1000; // in milliseconds
                         downloadRequest.Url = $"{DownloadUrl}?DownloadIdentifier={downloadId}";
                         _logger.Info($"Ktuvit: Downloading subtitle file with Download ID: {downloadId}");
                         var downloadResponse = await _httpClient.SendAsync(downloadRequest, System.Net.Http.HttpMethod.Get.ToString());
@@ -300,35 +333,6 @@ namespace Ktuvit.Plugin.Helpers
             return null;
         }
         
-        public bool KtuvitAccessValidation()
-        {
-            try
-            {
-                var httpRequest = new HttpRequestOptions();
-                httpRequest.Url = ApiBaseUrl;
-                var requestTimeout = Plugin.Instance.Options.requestTimeout ?? 5;
-                httpRequest.TimeoutMs = requestTimeout * 1000; // in milliseconds
-                var responseTask = _httpClient.GetResponse(httpRequest);
-                responseTask.Wait(); // Block until complete
-                var response = responseTask.Result;
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    _logger.Info("Ktuvit: Access validation successful.");
-                    return true;
-                }
-                else
-                {
-                    _logger.Error($"Ktuvit: Access validation failed with status code {response.StatusCode}. Ktuvit might not be available.");
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Ktuvit: Access validation failed. Ktuvit might not be available: {ex}");
-                return false;
-            }
-        }
-
         // Synchronous authentication for use in Validate
         public bool KtuvitAuthentication(string username, string password)
         {
@@ -336,6 +340,8 @@ namespace Ktuvit.Plugin.Helpers
             {
                 // Get Encryption Salt
                 var httpRequest = new HttpRequestOptions();
+                var requestTimeout = Plugin.Instance.Options.requestTimeout ?? 10;
+                httpRequest.TimeoutMs = requestTimeout * 1000; // in milliseconds
                 httpRequest.Url = ApiBaseUrl;
                 var responseTask = _httpClient.GetResponse(httpRequest);
                 responseTask.Wait(); // Block until complete
@@ -388,7 +394,7 @@ namespace Ktuvit.Plugin.Helpers
                         var searchResults = _jsonSerializer.DeserializeFromString<KtuvitLoginRequestResult>(initialResponse.d);
                         if (searchResults?.IsSuccess == true)
                         {
-                            _logger.Info("Ktuvit: Authentication successful.");
+                            _logger.Info("Ktuvit: Authenticated successfully.");
                             return true;
                         }
                         else
