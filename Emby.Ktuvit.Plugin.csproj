@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
 		<AssemblyName>Emby.Ktuvit.Plugin</AssemblyName>
 		<RootNamespace>Ktuvit.Plugin</RootNamespace>
-		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 		<Authors>Flawkee</Authors>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<GeneratedAssemblyInfoFile>assemblyinfo.cs</GeneratedAssemblyInfoFile>
-		<Version>1.2.0.1</Version>
+		<Version>1.2.1.2</Version>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -139,8 +139,9 @@ namespace Ktuvit.Plugin.Helpers
                         _logger.Info($"Ktuvit: Found {searchResults.Films.Count} films in search results for '{filmName}'");
                         foreach (var film in searchResults.Films)
                         {
-                            var extractedImdbId = film.IMDB_Link?.Split('/')[^2];
-                            if (film.ImdbID == imdbId || extractedImdbId == imdbId)
+                            var parts = film.IMDB_Link?.Split('/');
+                            var extractedImdbId = parts != null && parts.Length >= 2 ? parts[parts.Length - 2] : null;
+                            if (string.IsNullOrEmpty(imdbId) || film.ImdbID == imdbId || extractedImdbId == imdbId)
                             {
                                 _logger.Info($"Ktuvit: Match found for film '{filmName}' with Ktuvit ID: {film.ID}");
                                 return film.ID;

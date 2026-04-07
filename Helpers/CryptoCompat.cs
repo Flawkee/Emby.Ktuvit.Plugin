@@ -23,8 +23,7 @@ namespace Ktuvit.Plugin.Helpers
                 var pbkdf2 = new Rfc2898DeriveBytes(
                     Encoding.UTF8.GetBytes(salt),
                     Encoding.UTF8.GetBytes(email),
-                    3000,
-                    HashAlgorithmName.SHA1
+                    3000
                 );
                 byte[] key = pbkdf2.GetBytes(16); // 128-bit key
 
